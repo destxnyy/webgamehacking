@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Anti-Detection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 6: Anti-detection and obfuscation techniques for web game hacks.</p>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Anti-Detection & Obfuscation</h2>
+                <div class="section-highlight">
+                    <h3>A) Code Obfuscation for Your Injectors</h3>
+                    <p>Obfuscation makes injected scripts harder to analyze and easier to hide from signature-based detection.</p>
+                    <ul>
+                        <li>String obfuscation: encode important literals and decode them at runtime.</li>
+                        <li>Control flow flattening: break standard loops into complex switch statements.</li>
+                        <li>Dead code insertion: add no-op functions and unreachable blocks.</li>
+                    </ul>
+                </div>
+                <div class="section-highlight">
+                    <h3>B) Timing-Based Evasion</h3>
+                    <p>Delaying injection until after game checks reduces the chance of early detection.</p>
+                    <pre><code class="language-js">setTimeout(() =&gt; {
+  if (window.gameReady) {
+    installHooks();
+  }
+}, Math.random() * 1500 + 500);
+</code></pre>
+                    <ul>
+                        <li>Use randomized intervals when patching game functions.</li>
+                        <li>Wait for game-specific events rather than hard-coded timeouts.</li>
+                    </ul>
+                </div>
+                <div class="section-highlight">
+                    <h3>C) Signature Evasion</h3>
+                    <p>Change variable and function names, execution order, and payload structure to avoid known signatures.</p>
+                    <ul>
+                        <li>Rename identifiers in injection code.</li>
+                        <li>Split payloads across multiple files or functions.</li>
+                        <li>Generate polymorphic payloads that change each time they run.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

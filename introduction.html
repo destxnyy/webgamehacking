@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Introduction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 1: Introduction to web game hacking, client-side limitations, and the reconnaissance workflow.</p>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Introduction</h2>
+                <p>Web game hacking refers to techniques that modify, intercept, or extend browser-based games. It can range from simple script injection in the browser console to advanced runtime manipulation of WebGL engines and network traffic.</p>
+                <div class="notice warning">
+                    <strong>Ethical Note:</strong> This material is for education and security hardening only. Do not test these techniques on games or services without explicit permission.
+                </div>
+                <h3>What is web game hacking?</h3>
+                <p>Web game hacking covers any exploitation path that changes game logic, visual output, or network traffic in browser-hosted games. It is often used to gain unfair advantages, but the same knowledge helps developers create stronger defenses.</p>
+                <h3>Client-side vs Server-side limitations</h3>
+                <p>Most browser-based games consist of client-side rendering and server-side logic. Client-side hacks can alter what the player sees or inputs, but they cannot reliably defeat server validation in authoritative multiplayer systems.</p>
+                <ul>
+                    <li><strong>Client-side attacks</strong> can change DOM, JavaScript, local state, or render output.</li>
+                    <li><strong>Server-side protections</strong> must validate input, prevent cheating, and enforce game rules.</li>
+                </ul>
+                <p>The key defensive assumption is that anything running in the browser can be manipulated by the player. That means security should not rely solely on obfuscation or client validation.</p>
+                <h3>Getting started: how to begin hacking a web game</h3>
+                <p>Reconnaissance is the most important step. Start by identifying the game engine, the loader, and the points where code and assets are fetched.</p>
+                <ul>
+                    <li>Open the browser developer tools and inspect the <strong>Network</strong> tab for JS, WASM, JSON, and asset bundles.</li>
+                    <li>Use <strong>Sources</strong> or <strong>Debugger</strong> to find loaded scripts, entry points, mapped module names, and live objects.</li>
+                    <li>Search for global game objects such as <code>window.game</code>, <code>player</code>, <code>scene</code>, or engine-specific hooks from Three.js, Babylon.js, Phaser, or Unity.</li>
+                    <li>Scan for strings like <code>init</code>, <code>render</code>, <code>tick</code>, <code>update</code>, <code>draw</code>, or <code>loop</code> to identify main loops and hook points.</li>
+                    <li>For minified or bundled code, use pretty-print, source maps, and pattern searches on the raw bundle to recover structure.</li>
+                </ul>
+                <h4>Finding hidden source code</h4>
+                <p>Many games hide logic in bundles, loaders, or encrypted payloads. The network panel and browser cache are critical for discovery.</p>
+                <ul>
+                    <li>Download large <code>.js</code> or <code>.wasm</code> files from the network panel for offline analysis.</li>
+                    <li>Search the HTML and script tags for inline payloads, Base64 blobs, or dynamic <code>document.createElement('script')</code> injection.</li>
+                    <li>Look for <code>eval</code>, <code>new Function</code>, <code>atob</code>, <code>decodeURIComponent</code>, and custom decode/decompress functions.</li>
+                    <li>Use the <strong>Application</strong> tab to inspect service workers, local storage, IndexedDB, caches, and cookies that may store game code or runtime state.</li>
+                    <li>When available, use source maps from <code>.map</code> files to reconstruct function names and call sites from minified bundles.</li>
+                </ul>
+                <h4>Using XMLHttpRequest / fetch injection</h4>
+                <p>Hooking <code>XMLHttpRequest</code> and <code>fetch</code> lets you observe every network fetch and patch downloaded assets before the game executes them.</p>
+                <pre><code class="language-js">const originalOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(method, url) {
+  this.addEventListener('load', () =&gt; {
+    if (typeof url === 'string' && url.match(/\.(js|wasm|json|txt)$/)) {
+      console.log('XHR loaded:', url);
+      // inspect this.responseText or this.response
+    }
+  });
+  return originalOpen.apply(this, arguments);
+};
+
+const originalFetch = window.fetch;
+window.fetch = async function(resource, options) {
+  const response = await originalFetch(resource, options);
+  const url = typeof resource === 'string' ? resource : resource.url;
+  if (url && url.endsWith('.wasm')) {
+    const bytes = await response.arrayBuffer();
+    const patched = patchWasm(bytes);
+    return new Response(patched, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers
+    });
+  }
+  return response;
+};
+
+function patchWasm(bytes) {
+  // Example placeholder: inspect or modify the raw bytes here
+  return bytes;
+}
+</code></pre>
+                <h4>Understanding WASM and encrypted clients</h4>
+                <p>WebAssembly often replaces readable JavaScript with compiled binary modules. For games built around WASM, your hooks need to operate at the loader or import layer.</p>
+                <ul>
+                    <li>Hook <code>WebAssembly.instantiate</code> and <code>WebAssembly.instantiateStreaming</code> to inspect or patch module bytes.</li>
+                    <li>If the WASM module is encrypted, find the decryption routine in JavaScript and intercept the decrypted payload before instantiation.</li>
+                    <li>Wrap imports to intercept memory, random number generation, or game-specific helpers.</li>
+                </ul>
+                <pre><code class="language-js">const originalInstantiate = WebAssembly.instantiate;
+WebAssembly.instantiate = async function(bufferSource, importObject) {
+  let bytes;
+  if (bufferSource instanceof Response) {
+    bytes = await bufferSource.arrayBuffer();
+  } else if (bufferSource instanceof ArrayBuffer) {
+    bytes = bufferSource;
+  } else {
+    return originalInstantiate.apply(this, arguments);
+  }
+
+  const patched = patchWasm(bytes);
+  return originalInstantiate.call(this, patched, importObject);
+};
+
+const originalInstantiateStreaming = WebAssembly.instantiateStreaming;
+WebAssembly.instantiateStreaming = async function(responsePromise, importObject) {
+  const response = await responsePromise;
+  const bytes = await response.arrayBuffer();
+  const patched = patchWasm(bytes);
+  return originalInstantiate.call(this, patched, importObject);
+};
+
+function patchWasm(bytes) {
+  // inspect bytes, patch opcodes, or change import table entries
+  return bytes;
+}
+</code></pre>
+                <p>If the game wraps these calls, search for the loader function and hook there instead.</p>
+                <h4>StateFarmClient as a practical example</h4>
+                <p>Examples like <a href="https://github.com/Hydroflame522/StateFarmClient" target="_blank" rel="noreferrer">StateFarmClient</a> demonstrate how to hook browser APIs, identify game objects, and build a configurable client for Shell Shockers. Such projects provide real-world patterns for API hooks, state polling, and memory-style patching.</p>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

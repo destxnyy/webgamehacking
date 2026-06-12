@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Specific Hack Types</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 4: Specific hack types and implementation details for ESP, aimbots, triggerbots, and more.</p>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Specific Hack Types - Implementation Details</h2>
+                <div class="section-highlight">
+                    <h3>A) ESP (Extra Sensory Perception)</h3>
+                    <p>ESP overlays reveal in-game locations and entity state without modifying game physics.</p>
+                    <h4>Detection methods</h4>
+                    <ul>
+                        <li>Scan for injected redraw loops and overlay canvases.</li>
+                        <li>Check for custom DOM elements or WebGL state changes.</li>
+                    </ul>
+                    <h4>Implementation</h4>
+                    <p>ESP can be built by reading game object coordinates and projecting them into screen space.</p>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">ESP prototype:</span>
+                            <select class="builder-select">
+                                <option value="canvas-overlay">Canvas overlay</option>
+                                <option value="webgl-highlight">WebGL mesh highlight</option>
+                                <option value="bounding-box">Bounding box output</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Run these snippets on a local test page that exposes object positions. Then adapt the <code>objects</code> source to your target game's object model.</p>
+                        </div>
+                        <template data-choice="canvas-overlay">const canvas = document.createElement('canvas');
+canvas.style.position = 'fixed';
+canvas.style.pointerEvents = 'none';
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+canvas.style.left = '0';
+canvas.style.top = '0';
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+function drawEsp(objects) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  objects.forEach(obj => {
+    const screen = worldToScreen(obj.position);
+    ctx.strokeStyle = '#ff5500';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(screen.x - 20, screen.y - 40, 40, 80);
+  });
+}
+</template>
+                        <template data-choice="webgl-highlight">const originalRender = BABYLON.Scene.prototype.render;
+BABYLON.Scene.prototype.render = function() {
+  this.meshes.forEach(mesh => {
+    if (mesh.name.includes('enemy') && mesh.material) {
+      mesh.material.alpha = 0.35;
+      mesh.material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+    }
+  });
+  return originalRender.apply(this, arguments);
+};
+</template>
+                        <template data-choice="bounding-box">function worldToScreen(pos) {
+  // replace with game-specific projection logic
+  return {x: pos.x * 10, y: pos.y * 10};
+}
+const objects = window.mockObjects || [];
+objects.forEach(obj => {
+  const screen = worldToScreen(obj.position);
+  console.log('Enemy at', screen);
+});
+</template>
+                    </div>
+                    <pre><code class="language-js">const canvas = document.createElement('canvas');
+canvas.style.position = 'fixed';
+canvas.style.pointerEvents = 'none';
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+canvas.style.left = '0';
+canvas.style.top = '0';
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+function drawEsp(objects) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  objects.forEach(obj => {
+    const screen = worldToScreen(obj.position);
+    ctx.strokeStyle = '#ff5500';
+    ctx.strokeRect(screen.x - 20, screen.y - 40, 40, 80);
+  });
+}
+</code></pre>
+                    <p>Common visuals include wallhacks, 2D bounding boxes, distance markers, and lines from the player to targets.</p>
+                    <h4>Shell Shockers ESP</h4>
+                    <p>Shell Shockers can expose enemy eggs and players via the Babylon.js scene graph. A simple hooked render loop will tint enemies and reveal their positions.</p>
+                    <pre><code class="language-js">const originalRender = BABYLON.Scene.prototype.render;
+BABYLON.Scene.prototype.render = function() {
+  this.meshes.forEach(mesh =&gt; {
+    if (mesh.name.includes('player') && mesh.material) {
+      mesh.material.alpha = 0.35;
+      mesh.material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+    }
+  });
+  return originalRender.apply(this, arguments);
+};
+</code></pre>
+                </div>
+                <div class="section-highlight">
+                    <h3>B) Aimbot</h3>
+                    <p>Aimbots calculate aim vectors and optionally smooth motion to appear human.</p>
+                    <h4>Detection methods</h4>
+                    <ul>
+                        <li>Input validation that checks unnatural turn rates.</li>
+                        <li>Pattern detection of consistent headshots or aim snaps.</li>
+                    </ul>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Build an aimbot prototype:</span>
+                            <select class="builder-select">
+                                <option value="vector-calc">Aim vector calculator</option>
+                                <option value="smoothing">Smooth target tracking</option>
+                                <option value="fov-filter">FOV + target filter</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Load this code into the page console or a userscript, then adapt it to the actual player and enemy coordinate fields in your target game.</p>
+                        </div>
+                        <template data-choice="vector-calc">
+const target = {x: tx, y: ty, z: tz};
+const player = {x: px, y: py, z: pz};
+const dx = target.x - player.x;
+const dy = target.y - player.y;
+const dz = target.z - player.z;
+const yaw = Math.atan2(dz, dx);
+const pitch = Math.atan2(dy, Math.sqrt(dx*dx + dz*dz));
+console.log({yaw, pitch});
+                        </template>
+                        <template data-choice="smoothing">
+function smoothAngle(current, target, factor) {
+  return current + (target - current) * factor;
+}
+function aimAt(target, player, currentAngles) {
+  const desiredYaw = Math.atan2(target.z - player.z, target.x - player.x);
+  const desiredPitch = Math.atan2(target.y - player.y, Math.sqrt((target.x - player.x)**2 + (target.z - player.z)**2));
+  return {
+    yaw: smoothAngle(currentAngles.yaw, desiredYaw, 0.18),
+    pitch: smoothAngle(currentAngles.pitch, desiredPitch, 0.18)
+  };
+}
+                        </template>
+                        <template data-choice="fov-filter">
+function inFov(target, player, camDir, maxRadians) {
+  const dx = target.x - player.x;
+  const dz = target.z - player.z;
+  const targetAngle = Math.atan2(dz, dx);
+  const delta = Math.abs(targetAngle - camDir);
+  return delta < maxRadians;
+}
+function chooseTarget(enemies, player, camDir) {
+  return enemies.filter(e => inFov(e.position, player, camDir, Math.PI / 6))[0];
+}
+                        </template>
+                    </div>
+                    <h4>Formula</h4>
+                    <p>Use vector math to compute yaw and pitch from the current player position to enemy position. The exact fields depend on the game’s coordinate system.</p>
+                    <h4>Smoothing and human-like movement</h4>
+                    <p>Smoothing reduces detection by limiting angular velocity and interpolating cursor movement over multiple frames.</p>
+                    <h4>FOV limits</h4>
+                    <p>Only aim at targets within a configurable field of view to mimic normal play.</p>
+                    <h4>Silent aim</h4>
+                    <p>Silent aim chooses a target and sends corrected input data without visibly moving the camera, though this is only possible with cheats that can alter server-bound aim values.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>C) Triggerbot</h3>
+                    <p>A triggerbot fires automatically when the crosshair is over an enemy.</p>
+                    <h4>Detection methods</h4>
+                    <ul>
+                        <li>Look for repeated input at fixed intervals.</li>
+                        <li>Check if mouse events are generated without natural movement.</li>
+                    </ul>
+                    <h4>Implementation methods</h4>
+                    <p>Triggerbots can use pixel color detection, DOM collision checks, or entity bounding boxes.</p>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Triggerbot prototype:</span>
+                            <select class="builder-select">
+                                <option value="pixel-detect">Pixel color detection</option>
+                                <option value="box-collision">Bounding box collision</option>
+                                <option value="entity-filter">Entity filter</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Try this on a local page with a test crosshair and enemy markers, then adapt the detection logic to the actual game.</p>
+                        </div>
+                        <template data-choice="pixel-detect">const crosshair = document.getElementById('crosshair');
+const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+const pixel = ctx.getImageData(crosshair.x, crosshair.y, 1, 1).data;
+if (pixel[0] > 200 && pixel[1] < 100) {
+  window.dispatchEvent(new MouseEvent('mousedown', {button: 0}));
+}
+</template>
+                        <template data-choice="box-collision">const triggerZone = getCrosshairArea();
+const enemies = window.mockEnemies || [];
+if (enemies.some(enemy => isEnemyInZone(enemy, triggerZone))) {
+  window.dispatchEvent(new MouseEvent('mousedown', {button: 0}));
+}
+</template>
+                        <template data-choice="entity-filter">const enemies = window.gameEntities || [];
+const target = enemies.find(e => e.isVisible && e.isHostile && isWithinCrosshair(e.position));
+if (target) {
+  window.dispatchEvent(new MouseEvent('mousedown', {button: 0}));
+}
+</template>
+                    </div>
+                    <pre><code class="language-js">const triggerZone = getCrosshairArea();
+if (isEnemyInZone(triggerZone)) {
+  window.dispatchEvent(new MouseEvent('mousedown', {button: 0}));
+}
+</code></pre>
+                    <h4>Reaction time randomization</h4>
+                    <p>Add random delay to avoid exact timing patterns.</p>
+                    <h4>Krunker trigger pattern</h4>
+                    <p>Krunker hacks often hook the local player's crosshair state and fire immediately when an enemy is in the published bounding area. This can be implemented using existing aim helpers and the game's frame update functions.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>D) Bloom / Spread Removal</h3>
+                    <p>This hack removes weapon spread by patching client-side firing calculations.</p>
+                    <h4>Detection</h4>
+                    <ul>
+                        <li>Check if weapon state is inconsistent with recoil animation.</li>
+                        <li>Detect missing bloom application in shot vectors.</li>
+                    </ul>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Spread removal prototype:</span>
+                            <select class="builder-select">
+                                <option value="disable-spread">Disable spread</option>
+                                <option value="normalize-aim">Normalize aim vector</option>
+                                <option value="recoil-reset">Reset recoil</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Run on a local shooter test page that computes spread, then confirm the bullet direction becomes perfectly straight.</p>
+                        </div>
+                        <template data-choice="disable-spread">const originalSpread = game.weapon.calculateSpread;
+game.weapon.calculateSpread = function() {
+  return 0;
+};
+</template>
+                        <template data-choice="normalize-aim">const originalFire = game.weapon.fire;
+game.weapon.fire = function(target) {
+  target.direction = normalize(target.direction);
+  return originalFire.call(this, target);
+};
+</template>
+                        <template data-choice="recoil-reset">const originalApplyRecoil = game.player.applyRecoil;
+game.player.applyRecoil = function() {
+  this.recoil = 0;
+};
+</template>
+                    </div>
+                    <h4>Implementation</h4>
+                    <p>Override the function that computes bullet spread or normalize the aim vector before fire.</p>
+                    <pre><code class="language-js">const originalSpread = game.weapon.calculateSpread;
+game.weapon.calculateSpread = function() {
+  return 0; // disable bloom
+};
+</code></pre>
+                    <p><strong>No-spread</strong> is usually easier than <strong>no-recoil</strong>, which requires intercepting camera kickback as well.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>E) Speed / Teleport</h3>
+                    <p>Speed hacks manipulate movement state, while teleport hacks change player position directly.</p>
+                    <h4>Detection</h4>
+                    <ul>
+                        <li>Server-side validation of position deltas and velocity.</li>
+                        <li>Anti-cheat heuristics for impossible movement.</li>
+                    </ul>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Movement prototype:</span>
+                            <select class="builder-select">
+                                <option value="speed-multiplier">Speed multiplier</option>
+                                <option value="teleport-forward">Teleport forward</option>
+                                <option value="freeze-position">Freeze position</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Test these on a local movement demo page that updates a player position object each frame.</p>
+                        </div>
+                        <template data-choice="speed-multiplier">player.velocity.x *= 2;
+player.velocity.z *= 2;
+</template>
+                        <template data-choice="teleport-forward">player.position.x += 10;
+player.position.z += 0;
+</template>
+                        <template data-choice="freeze-position">player.velocity = {x: 0, y: 0, z: 0};
+</template>
+                    </div>
+                    <h4>Implementation</h4>
+                    <p>Modify movement vectors or directly set the player position object in memory.</p>
+                    <pre><code class="language-js">player.velocity = {x: 0, y: 0, z: 0};
+player.position.x += 10; // teleport forward
+</code></pre>
+                    <p><strong>Lag switch basics:</strong> Delay network packets or freeze client updates to desync position from the server. Modern games often detect this behavior.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>F) Radar Hacks</h3>
+                    <p>Radar hacks reveal enemy positions on a minimap or extra UI panel.</p>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Radar prototype:</span>
+                            <select class="builder-select">
+                                <option value="minimap-draw">Minimap draw</option>
+                                <option value="panel-overlay">Panel overlay</option>
+                                <option value="fog-bypass">Fog bypass</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Try these on a local test page that exposes entity coordinates and render a small radar overlay.</p>
+                        </div>
+                        <template data-choice="minimap-draw">const overlay = document.createElement('canvas');
+overlay.width = 200;
+overlay.height = 200;
+overlay.style.position = 'fixed';
+overlay.style.right = '12px';
+overlay.style.top = '12px';
+overlay.style.background = 'rgba(0,0,0,0.6)';
+document.body.appendChild(overlay);
+const ctx = overlay.getContext('2d');
+function drawRadar(entities) {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  entities.forEach(e => {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(e.x, e.y, 6, 6);
+  });
+}
+</template>
+                        <template data-choice="panel-overlay">const panel = document.createElement('div');
+panel.style.position = 'fixed';
+panel.style.bottom = '12px';
+panel.style.right = '12px';
+panel.style.width = '260px';
+panel.style.maxHeight = '300px';
+panel.style.overflow = 'auto';
+panel.style.background = 'rgba(0,0,0,0.75)';
+panel.style.color = '#fff';
+panel.style.padding = '12px';
+panel.innerText = 'Radar loaded';
+document.body.appendChild(panel);
+function updateRadar(entities) {
+  panel.innerText = entities.map(e => `${e.name}: ${e.distance.toFixed(1)}`).join('\n');
+}
+</template>
+                        <template data-choice="fog-bypass">const fogLayer = document.querySelector('.fog-layer');
+if (fogLayer) {
+  fogLayer.style.display = 'none';
+}
+</template>
+                    </div>
+                    <h4>Implementation</h4>
+                    <p>Read entity coordinates from game state and draw them onto a mapped overlay.</p>
+                    <h4>Fog of war removal</h4>
+                    <p>Disable or bypass the game layer that hides offscreen or unseen units.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>G) Infinite Resources / Ammo</h3>
+                    <p>Freezing client-side values can create infinite health, ammo, or currency.</p>
+                    <h4>Detection</h4>
+                    <ul>
+                        <li>Server-authoritative games will reject invalid resource updates.</li>
+                        <li>Client-side changes are visible as inconsistent state if server syncs frequently.</li>
+                    </ul>
+                    <div class="builder prototype-builder">
+                        <div class="builder-header">
+                            <span class="builder-label">Resource freeze prototype:</span>
+                            <select class="builder-select">
+                                <option value="interval-freeze">Interval freeze</option>
+                                <option value="getter-setter">Getter/setter trap</option>
+                                <option value="wasm-freeze">WASM memory patch</option>
+                            </select>
+                            <button class="copy-code">Copy snippet</button>
+                        </div>
+                        <div class="builder-preview">
+                            <pre><code class="language-js js-preview"></code></pre>
+                        </div>
+                        <div class="builder-notes">
+                            <p><strong>How to use:</strong> Test this on a local progress object and confirm the values stay constant despite normal game updates.</p>
+                        </div>
+                        <template data-choice="interval-freeze">const resourcePath = ['player', 'inventory', 'ammo'];
+setInterval(() => {
+  const ammo = getNested(window.gameState, resourcePath);
+  if (ammo != null) ammo.value = 999;
+}, 100);
+</template>
+                        <template data-choice="getter-setter">const resourceObj = window.gameState.player.inventory;
+Object.defineProperty(resourceObj, 'ammo', {
+  get() { return 999; },
+  set(value) { console.log('blocked ammo write', value); }
+});
+</template>
+                        <template data-choice="wasm-freeze">const origInstantiate = WebAssembly.instantiate;
+WebAssembly.instantiate = async (bufferSource, importObject) => {
+  const bytes = bufferSource instanceof ArrayBuffer ? bufferSource : await bufferSource.arrayBuffer();
+  const patched = patchWasm(bytes, (memory) => {
+    memory.setUint32(AMMO_OFFSET, 999, true);
+  });
+  return origInstantiate.call(this, patched, importObject);
+};
+</template>
+                    </div>
+                    <h4>Implementation</h4>
+                    <pre><code class="language-js">const resourcePath = ['player', 'inventory', 'ammo'];
+setInterval(() =&gt; {
+  const ammo = getNested(window.gameState, resourcePath);
+  if (ammo != null) ammo.value = 999;
+}, 100);
+</code></pre>
+                    <p>For WebAssembly games, use module memory patching to freeze numeric values at the binary level.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="interactive.js"></script>
+</body>
+</html>

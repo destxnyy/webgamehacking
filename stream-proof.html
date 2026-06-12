@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Stream-Proof Hacking</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 3: Stream-proof hacking techniques for hidden overlays, capture protection, and private control channels.</p>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Stream-Proof Hacking Techniques</h2>
+                <p>These techniques focus on keeping injected game overlays and controls hidden from screen capture software like OBS, XSplit, and built-in OS capture tools.</p>
+                <div class="section-highlight">
+                    <h3>A) Visual ESP Overlays</h3>
+                    <p>Not all overlays are stream-safe. An in-browser canvas or DOM overlay inside the captured browser window will still be visible to display capture. A separate overlay process is safer.</p>
+                    <ul>
+                        <li><strong>Window capture vs display capture:</strong> Window capture can isolate a single application window, while display capture records the entire monitor.</li>
+                        <li><strong>Canvas is not streamproof:</strong> Any canvas rendered inside the captured window is still captured if that window or monitor is part of the stream.</li>
+                        <li><strong>Separate overlay process:</strong> Use a second browser window, Electron helper, or native overlay to keep sensitive visuals outside the captured game surface.</li>
+                        <li><strong>DirectX / OpenGL overlay injection:</strong> Native overlays can render above the game and may be ignored by some capture sources when the source is limited to the game process.</li>
+                        <li><strong>Overlay placement:</strong> Put the private overlay on a secondary monitor or off-screen window for maximum safety.</li>
+                    </ul>
+                    <p class="notice"><strong>Detection Risk:</strong> Lower when the cheat UI is kept separate from the captured game surface. If the stream captures the whole desktop, separate windows are still visible unless excluded by the capture source.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>B) Windows capture protection</h3>
+                    <p>On Windows, display affinity APIs can mark a window as excluded from capture by supported capture implementations.</p>
+                    <pre><code class="language-sh">// Pseudo-code for user32 SetWindowDisplayAffinity
+HWND hwnd = FindWindow(NULL, L"Private Overlay");
+SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+</code></pre>
+                    <p>Use <code>SetWindowDisplayAffinity</code> with <code>WDA_EXCLUDEFROMCAPTURE</code> to hint that the window should not be captured. This is useful for native helper windows and overlays but not a universal guarantee.</p>
+                    <ul>
+                        <li><strong>WDA_EXCLUDEFROMCAPTURE</strong> is available on recent Windows versions and is honored by many Windows capture APIs.</li>
+                        <li>It does not protect browser canvas content rendered in the same process.</li>
+                        <li>It is best used for separate native windows that host private UI.</li>
+                    </ul>
+                </div>
+                <div class="section-highlight">
+                    <h3>C) OBS / XSplit capture considerations</h3>
+                    <p>Understand the capture mode your streamer is using.</p>
+                    <ul>
+                        <li><strong>Window capture:</strong> captures one application window.</li>
+                        <li><strong>Display capture:</strong> captures the whole monitor.</li>
+                        <li><strong>Game capture:</strong> captures a specific process or graphics surface.</li>
+                    </ul>
+                    <p>If you are using window capture, keep the game and cheat windows separate. If you are using game capture, use a helper overlay that is outside the captured process.</p>
+                </div>
+                <div class="section-highlight">
+                    <h3>D) Audio Bypasses</h3>
+                    <p>Keep cheat audio private by routing it to a different device or a local-only channel.</p>
+                    <ul>
+                        <li>Use a dedicated headset or virtual audio device not included in the stream.</li>
+                        <li>Generate local-only audio with the Web Audio API.</li>
+                        <li>Use vibration or status LEDs for silent feedback.</li>
+                    </ul>
+                </div>
+                <div class="section-highlight">
+                    <h3>E) Input Methods</h3>
+                    <p>Use hidden triggers and controls that are unlikely to appear in the stream.</p>
+                    <ul>
+                        <li>Choose complex hotkeys and avoid on-screen prompts.</li>
+                        <li>Use the Web Speech API for private voice commands.</li>
+                        <li>Keep cheat dashboards on a second monitor or external display.</li>
+                    </ul>
+                </div>
+                <div class="section-highlight">
+                    <h3>F) Stream-safe visual architecture</h3>
+                    <ul>
+                        <li>Run cheat UI in a separate window or process, not inside the game canvas.</li>
+                        <li>Use hidden windows, secondary displays, or overlay processes to keep the capture clean.</li>
+                        <li>Log debug output to a private console window or file.</li>
+                    </ul>
+                    <p>More advanced setups use a native helper process or Electron overlay so the browser game remains unchanged and the stream source can be limited to the game itself. This is the most reliable stream-proof approach.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
