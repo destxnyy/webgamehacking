@@ -11,6 +11,10 @@
         <header>
             <h1>The Web Game Hacking Encyclopedia</h1>
             <p>Section 2: Injection methods catalog covering console, extension, userscript, external, proxy, and WASM techniques.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
         </header>
         <nav class="sidebar" aria-label="Site navigation">
             <h2>Navigation</h2>
@@ -22,6 +26,10 @@
                 <li><a href="specific-hack-types.html">Hack Types</a></li>
                 <li><a href="case-studies.html">Case Studies</a></li>
                 <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="defensive-analysis.html">Defensive Analysis</a></li>
                 <li><a href="resources.html">Resources</a></li>
             </ol>
         </nav>
@@ -36,7 +44,7 @@
                     <p>Open the browser console and run code directly in the page context. That code can override functions, inspect objects, and mutate global state.</p>
                     <h4>Step-by-step implementation</h4>
                     <ol>
-                        <li>Open developer tools with <code>F12</code> or <code>Ctrl+Shift+I</code>.</li>
+                        <li>Open developer tools with <code>F12</code> or <code>Ctrl+Shift+I</code>. On macOS, use <code>Cmd+Option+I</code> (or <code>Fn+F12</code> on keyboards without a dedicated function row); on Linux, <code>Ctrl+Shift+I</code> or <code>F12</code> is usually the same path.</li>
                         <li>Switch to the console tab.</li>
                         <li>Inspect the page with <code>window</code>, <code>document</code>, and loaded scripts.</li>
                         <li>Execute a short prototype injection and verify the effect.</li>
@@ -324,6 +332,7 @@ new MutationObserver(records => {
                     <h4>Chrome DevTools Protocol (CDP) via <code>--remote-debugging-port</code></h4>
                     <p>Launch Chrome with a remote debugging port and connect via WebSocket to inject scripts or modify page state remotely.</p>
                     <pre><code class="language-sh">chrome --remote-debugging-port=9222 --user-data-dir=/tmp/custom-profile</code></pre>
+                    <p>On macOS, the same launch usually works with <code>open -a "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir=/tmp/custom-profile</code>. On Linux, use your installed browser binary such as <code>google-chrome</code>, <code>chromium</code>, or <code>chromium-browser</code> with the same flags.</p>
                     <div class="builder prototype-builder">
                         <div class="builder-header">
                             <span class="builder-label">CDP prototype:</span>
@@ -390,6 +399,7 @@ const browser = await puppeteer.launch({
                     <p>Intercepting and modifying network traffic between the browser and game servers can alter game behavior or unblock hidden data.</p>
                     <h4>Fiddler / Burp Suite script injection</h4>
                     <p>Use proxy scripting hooks to rewrite HTML, JavaScript, or WebSocket messages.</p>
+                    <p>Fiddler is most common on Windows, so on macOS and Linux the equivalent workflow is usually Burp Suite or <code>mitmproxy</code>, both of which support the same kind of request/response rewriting and WebSocket inspection.</p>
                     <pre><code class="language-js">// FiddlerScript OnBeforeResponse example
 if (oSession.uriContains("examplegame.com")) {
   oSession.utilDecodeResponse();

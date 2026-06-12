@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Defensive Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 11: Defensive analysis, integrity checks, anti-tamper signals, and how to evaluate injected code safely.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="defensive-analysis.html">Defensive Analysis</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Defensive Analysis for Browser Game Logic</h2>
+                <p>This section adds the countermeasure and evaluation patterns that help you understand what a game might flag as suspicious, as well as how to test those checks safely.</p>
+
+                <div class="section-highlight">
+                    <h3>A) Detecting patching and instrumentation</h3>
+                    <p>When you study how browser games detect tampering, the first thing to monitor is whether the game expects its own functions to remain untouched. Many browser games check for function replacement, suspicious property additions, or hook-like wrappers around update loops. These checks are often simple and easy to spot once you know what to search for.</p>
+                    <ul>
+                        <li>Watch for unexpected function replacements on <code>window</code>, imported modules, and global game objects.</li>
+                        <li>Compare live function signatures against baseline snapshots so you can see if hooks have wrapped or replaced critical methods.</li>
+                        <li>Use timing and memory checks to reveal unusual pauses, hot loops, or repeated callback execution that would not be present in normal gameplay.</li>
+                        <li>Monitor for unusual property enumeration, global object growth, or extra debug symbols that appear only after a patch is loaded.</li>
+                    </ul>
+                    <p>Modern browser games often look for the simplest of red flags: a function replaced by an injected wrapper, a new global exposed by the loader, or a game loop that now executes more often than expected. Understanding these checks is useful because it teaches you which patch paths are more likely to be ignored by the game’s own logic.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>B) Integrity and checksum checks</h3>
+                    <p>Integrity checks are commonly used to verify script files, asset bundles, JSON config data, and WebAssembly modules before the game allows a session to continue. If the game hashes a bundle or compares a loaded version number, that is a strong clue that the client expects some level of consistency. These checks are usually the easiest things to emulate or bypass once you understand what they validate.</p>
+                    <ul>
+                        <li>Hash game scripts, JSON bundles, and WASM modules to see whether the game uses versioning or digest validation.</li>
+                        <li>Verify whether loaded resources match expected checksums or version IDs at startup or on every update cycle.</li>
+                        <li>Look for code paths that validate script or asset integrity before allowing important gameplay functions to proceed.</li>
+                        <li>Compare the runtime-loaded file versions to the page source or service-worker cache so you can identify where the game’s trust boundary is enforced.</li>
+                    </ul>
+                    <p>In practical terms, integrity checks are often the biggest clue that the game is trying to protect its logic from easy tampering. If you can identify those checks, you can decide whether to patch around them, delay injection until after they pass, or avoid touching the code path entirely.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>C) Timing and behavioral anomalies</h3>
+                    <p>A lot of browser-game anti-tamper logic is based on timing anomalies. If a patch introduces a new hot loop, delays a frame, changes the order of callbacks, or causes the game to call one function far more often than normal, it can stand out immediately. That is why monitoring timing and behavioral patterns is so important during any experiment with browser-game logic.</p>
+                    <ul>
+                        <li>Flag unusual frame rates, huge callback spikes, repeated network retries, or loops that keep the page awake longer than normal.</li>
+                        <li>Compare user input timing to expected game pacing so you can measure whether injected code is altering the rhythm of gameplay.</li>
+                        <li>Observe whether injected hooks change the normal flow of rendering, asset loading, or state reconciliation in the browser.</li>
+                        <li>Use baseline sessions to compare a clean run with a patched run, because the difference in timing often identifies the exact hook or mutation path that stands out.</li>
+                    </ul>
+                    <p>Graphics-heavy browser games can hide a lot of logic visually, but timing often exposes it. If the browser starts doing too much work in the same callback, or if a supposedly passive patch starts causing frame drops or state jumps, the game can infer that something has changed. This is why careful, measured patching is always better than heavy-handed rewriting.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>D) Safe evaluation workflow</h3>
+                    <ol>
+                        <li>Establish a clean baseline on a local mock page before you touch any real game logic.</li>
+                        <li>Instrument one update function, one network callback, or one state object at a time so you know exactly what changed.</li>
+                        <li>Compare the patched run against the baseline run using logs, frame timings, and state snapshots.</li>
+                        <li>Document the patch path, the effect you expected, and the detection signals you observed so you can refine the approach later.</li>
+                    </ol>
+                    <p>This workflow helps you understand what the game is likely to flag as suspicious and which patching strategies are low noise versus high noise. The more precise your measurement, the more likely you are to find real improvements instead of creating obvious, fragile hacks.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="interactive.js"></script>
+</body>
+</html>

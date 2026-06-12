@@ -11,6 +11,10 @@
         <header>
             <h1>The Web Game Hacking Encyclopedia</h1>
             <p>Section 3: Stream-proof hacking techniques for hidden overlays, capture protection, and private control channels.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
         </header>
         <nav class="sidebar" aria-label="Site navigation">
             <h2>Navigation</h2>
@@ -22,6 +26,10 @@
                 <li><a href="specific-hack-types.html">Hack Types</a></li>
                 <li><a href="case-studies.html">Case Studies</a></li>
                 <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="defensive-analysis.html">Defensive Analysis</a></li>
                 <li><a href="resources.html">Resources</a></li>
             </ol>
         </nav>
@@ -42,8 +50,8 @@
                     <p class="notice"><strong>Detection Risk:</strong> Lower when the cheat UI is kept separate from the captured game surface. If the stream captures the whole desktop, separate windows are still visible unless excluded by the capture source.</p>
                 </div>
                 <div class="section-highlight">
-                    <h3>B) Windows capture protection</h3>
-                    <p>On Windows, display affinity APIs can mark a window as excluded from capture by supported capture implementations.</p>
+                    <h3>B) Capture protection across Windows, macOS, and Linux</h3>
+                    <p>On Windows, display affinity APIs can mark a window as excluded from capture by supported capture implementations. On macOS and Linux, the same goal is usually achieved with separate windows, private overlay processes, OBS/XSplit scene filters, or capture-source restrictions, because the Windows-only affinity API is not available there.</p>
                     <pre><code class="language-sh">// Pseudo-code for user32 SetWindowDisplayAffinity
 HWND hwnd = FindWindow(NULL, L"Private Overlay");
 SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
@@ -95,5 +103,6 @@ SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
             </section>
         </main>
     </div>
+    <script src="interactive.js"></script>
 </body>
 </html>

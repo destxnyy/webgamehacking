@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Browser Internals</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 9: Browser internals, rendering pipelines, networking, service workers, and the runtime details that drive browser-game logic.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Browser Internals for Game Logic Research</h2>
+                <p>This page adds the runtime, rendering, and network concepts that are most important when analyzing browser games in a controlled environment.</p>
+
+                <div class="section-highlight">
+                    <h3>A) Event loop and scheduling</h3>
+                    <p>Browser games are usually driven by an event loop that alternates between user input, rendering, and network callbacks. If you want to understand where the real gameplay logic lives, you must map the update path from the event loop into the object model the game uses to draw the world. The main goal is to identify which callback fires every frame, which callback consumes player input, and which callback mutates the rendered state that the user sees.</p>
+                    <ul>
+                        <li>Understand the call stack, task queue, and microtask queue, because Promise chains and timers often run in a different order than you expect.</li>
+                        <li>Measure how animation frames, timers, and Promise callbacks interleave, especially when the game uses <code>setInterval</code>, <code>requestAnimationFrame</code>, or multiple animation layers.</li>
+                        <li>Use <code>performance.now()</code>, the Performance panel, and frame timing traces to identify hot loops, long tasks, and render stalls that can reveal the update path.</li>
+                        <li>Watch for repeated scheduling that looks like a physics loop or inventory refresh cycle—those are often the key functions to patch.</li>
+                    </ul>
+                    <p>In online browser games, the event loop often hides the real logic behind a chain of wrappers: input callbacks update player state, network callbacks update the world, then a render callback draws the screen. Following that chain reveals where damage, movement, cooldowns, and resource changes are finally applied.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>B) Canvas, SVG, and WebGL rendering</h3>
+                    <p>Canvas and WebGL games expose different surfaces for inspection. Canvas 2D games often reveal state through draw calls, screen coordinates, and object positions. WebGL games tend to keep their world state in meshes, buffers, materials, textures, and uniform values. Either way, the browser renders the game world from state that the JavaScript layer updates, which makes the renderer a strong place to inspect or patch behavior.</p>
+                    <ul>
+                        <li>Canvas 2D games expose immediate drawing state and render loops, so you can often trace which object coordinates are being drawn and how often the game refreshes them.</li>
+                        <li>WebGL games often keep geometry, shaders, uniforms, textures, and camera transforms in browser-managed buffers that can be inspected through the live object graph.</li>
+                        <li>Inspect frame composition, texture uploads, and offscreen rendering paths for debugging hooks, especially when the game uses overlays or post-processing effects.</li>
+                        <li>Look for helper functions that update camera direction, object visibility, projectile trails, or enemy markers—these are often worth instrumenting because they reveal the exact world state used for gameplay.</li>
+                    </ul>
+                    <p>When you understand the renderer, you can tell which values are purely visual and which values control real gameplay. That separation is critical because a patch that only changes what is drawn may look impressive but may not affect the underlying game logic at all.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>C) WebSocket, fetch, and network behavior</h3>
+                    <p>Network behavior is one of the highest-value parts of a browser game to study. A browser game can hide its logic in silent background requests, enemy position updates, state reconciliation packets, and resource update messages. These messages usually tell you what the game believes is true at the moment the client renders your screen. If you can observe and replay those streams, you can understand what values are authoritative and what values are only local polish.</p>
+                    <ul>
+                        <li>Observe WebSocket frame timing and request/response sequences to identify the state packets that drive movement, hits, timers, and item updates.</li>
+                        <li>Map <code>fetch</code> and <code>XMLHttpRequest</code> calls to asset endpoints, config endpoints, matchmaking endpoints, and economics endpoints.</li>
+                        <li>Record packet ordering and frame timing to understand how the game responds to user input, especially around movement, attacks, and combat resolution.</li>
+                        <li>Compare the same request path across multiple sessions to detect what values are constant and what values are generated per session.</li>
+                    </ul>
+                    <p>For online browser games, the most useful network data usually includes spawn messages, hit confirmations, health values, inventory responses, skill cooldowns, and any packet that contains serialized player state. Those are the lanes that matter for real gameplay logic.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>D) Service workers and offline asset paths</h3>
+                    <p>Service workers are often overlooked, but they can be extremely important in browser games because they can intercept requests, serve cached bundles, and rewrite how the game retrieves assets. If the game uses a service worker to cache the full game client, you can often observe update timing, asset versioning, and the resource path that loads the real game logic.</p>
+                    <ul>
+                        <li>Service workers can intercept network traffic and serve cached assets, which means the browser may not fetch the latest files even when the page appears fresh.</li>
+                        <li>Investigate registration behavior, fetch events, and update timing to see how the game handles cache invalidation.</li>
+                        <li>Use a controlled test page to observe how the browser resolves cached resources and whether assets are served from memory, disk cache, or the service worker layer.</li>
+                        <li>Inspect the asset manifest, version signature, and the worker fetch handler because these are often the same pieces that define which game logic gets executed in the browser.</li>
+                    </ul>
+                    <p>When a game uses persistent assets or offline caching, the service worker layer can expose how the game version is selected, how update bundles are delivered, and which resources the browser trusts enough to keep around between sessions. That information is valuable because it reveals the real code path that the client is expected to use.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>E) DevTools workflow for runtime mapping</h3>
+                    <ol>
+                        <li>Start with the Sources panel to find the bootstrapping path, update loop, and the first function that initializes the player, world, or input handlers.</li>
+                        <li>Use the Network panel to map asset, config, login, and state update downloads so you can see which responses drive gameplay.</li>
+                        <li>Use the Performance panel to identify long tasks and frame drops that reveal the game’s real update cadence and its most expensive callback paths.</li>
+                        <li>Use the Application panel to inspect storage, service workers, cache data, and the browser-side objects that keep the game running between sessions.</li>
+                        <li>Use the Console panel to log object snapshots, patch hooks, and selected game events as the page boots and as gameplay progresses.</li>
+                    </ol>
+                    <p>Good analysis always starts with making a map: where does the game boot, what functions are called first, which network requests matter, and which objects are mutated every frame? Once that map exists, every later patch becomes a targeted intervention instead of blind experimentation.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="interactive.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Game Logic Patching</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 10: Game logic patching, state rewrites, memory-style inspection, and sandboxed experimentation techniques.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Game Logic Patching</h2>
+                <p>This section focuses on practical patching approaches that help you understand how browser games calculate movement, resources, timers, and inventory state.</p>
+
+                <div class="section-highlight">
+                    <h3>A) Patch the update loop</h3>
+                    <p>The update loop is the most important place to patch because it often decides how much health, speed, stamina, or ammo the player has at the end of a frame. In many browser games, the loop is a single function that reads current state, applies movement rules, and writes a new state snapshot back to the player object or the renderer. If you can hook that path, you can alter the real gameplay logic instead of only changing the visible overlay.</p>
+                    <ul>
+                        <li>Identify the main game tick or animation frame callback and log what it reads before it writes anything back.</li>
+                        <li>Wrap the final update function and capture the state snapshot just before the game applies the mutation.</li>
+                        <li>Patch the output of the update function whenever possible, because that is where the game’s final authoritative values are produced.</li>
+                        <li>Keep the wrapper small and precise so the game still behaves like normal while you change only the values that matter.</li>
+                    </ul>
+                    <p>Most browser games use one of three patterns: a main animation frame, a physics heartbeat, or a network-driven update loop. If you map those three patterns, you can quickly tell which callback is responsible for movement, health, cooldowns, or enemy AI. That is the core knowledge you need for targeted patching.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>B) Patch player, enemy, and inventory objects</h3>
+                    <p>Player state is often stored as a plain object or as nested data inside a larger world object. Enemy state might be stored in a list, a dictionary, or a class instance. Inventory data is frequently stored in arrays or maps that are updated every frame. Understanding this structure is the difference between random guesses and real logic injections.</p>
+                    <ul>
+                        <li>Read and rewrite object fields in a controlled test harness before touching live code so you understand how the game expects them to behave.</li>
+                        <li>Identify whether the game uses plain objects, arrays, nested maps, or class instances to hold each important state variable.</li>
+                        <li>Track how often the game rehydrates those structures during a frame because that determines when your patch will actually take effect.</li>
+                        <li>Patch the state object that the render layer consumes, not just the temporary variable used in the current function call.</li>
+                    </ul>
+                    <p>Inventory, ammo, coins, health, and skill levels are often stored in one central object that the renderer reads at the end of each update. If you patch that central object, you can produce visible and reliable changes in the gameplay surface without having to fight every individual UI element.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>C) Patch timers and cooldowns</h3>
+                    <p>Cooldowns are a favorite target in browser games because they are usually simple numerical comparisons against timer state. If a game checks <code>now - lastUse > cooldown</code> or uses a <code>setTimeout</code> to enforce a delay, then you can often alter the behavior by changing the comparison value, the stored timestamp, or the timer that backs the cooldown.</p>
+                    <ul>
+                        <li>Wrap timers and delay functions to observe when cooldowns are consumed and what they are compared against.</li>
+                        <li>Patch the comparison values that drive skill locks, reload timers, spawn delays, and reactivation windows.</li>
+                        <li>Log the delta between expected and actual timer state so you can see whether the game is updating from system time, frame time, or a custom loop.</li>
+                        <li>When a cooldown is enforced purely in the client, you can often shorten it or suppress it with a small change to the stored timestamp.</li>
+                    </ul>
+                    <p>Cooldown manipulation is one of the cleanest ways to make a browser game feel “broken” because the game often has no deeper verification beyond the local timer or the current update cycle. That makes it one of the easiest attack paths to identify in a real browser-based game.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>D) Resource and currency rewrites</h3>
+                    <p>Resources like coins, experience, ammo, score, energy, and health are usually updated in a small number of central functions. If you can identify those update points, you can change the game’s visible economy without rewriting the whole page. That makes resource manipulation one of the most practical and high-value forms of patching in online browser games.</p>
+                    <ul>
+                        <li>Patch the path where the game updates coins, ammo, health, experience, or energy so the changed value is written into the state used by the UI.</li>
+                        <li>Test the effect in a local mock environment before applying the same mapping to real code so you know which values cause the real gameplay change.</li>
+                        <li>Reproduce the exact UI update path that the game uses for the resource display, because the visible number often comes from the same central state object the logic uses.</li>
+                        <li>When the game uses a remote inventory sync, patch the local state update so the UI changes immediately, then observe how the server reacts.</li>
+                    </ul>
+                    <p>It is often enough to intercept the point where the game writes a resource adjustment into the current session state. That gives you a fast path to modify the value without touching the rendering function at all. Once the state is patched, the UI usually follows naturally.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>E) Movement, aim, and combat state rewrites</h3>
+                    <p>Many browser games handle movement and combat through a small set of update functions that combine input, animation, and physics. If you can observe or patch these paths, you can alter movement speed, aim correction, projectile behavior, or hit detection without changing the entire game. This is where high-impact patches usually come from: not from random global hooks, but from the functions that actually determine combat outcomes.</p>
+                    <ul>
+                        <li>Look for update functions that consume player input, calculate new coordinates, and then write the result back to the render state.</li>
+                        <li>Patch movement speed, jump height, gravity, or aim smoothing only after you confirm which state variables are actually applied to the player object.</li>
+                        <li>Watch for separate paths for client-side prediction and server-side reconciliation; the former is often easier to patch locally.</li>
+                        <li>When a game uses raycasting, collision checks, or simple geometry, patch the values that compute collision results or projectile paths.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="interactive.js"></script>
+</body>
+</html>

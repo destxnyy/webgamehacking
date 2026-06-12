@@ -11,6 +11,10 @@
         <header>
             <h1>The Web Game Hacking Encyclopedia</h1>
             <p>Section 1: Introduction to web game hacking, client-side limitations, and the reconnaissance workflow.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
         </header>
         <nav class="sidebar" aria-label="Site navigation">
             <h2>Navigation</h2>
@@ -22,6 +26,10 @@
                 <li><a href="specific-hack-types.html">Hack Types</a></li>
                 <li><a href="case-studies.html">Case Studies</a></li>
                 <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="defensive-analysis.html">Defensive Analysis</a></li>
                 <li><a href="resources.html">Resources</a></li>
             </ol>
         </nav>
@@ -134,5 +142,6 @@ function patchWasm(bytes) {
             </section>
         </main>
     </div>
+    <script src="interactive.js"></script>
 </body>
 </html>

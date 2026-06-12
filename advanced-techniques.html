@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Web Game Hacking Encyclopedia – Advanced Techniques</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1>The Web Game Hacking Encyclopedia</h1>
+            <p>Section 8: Advanced browser-game hacking patterns, patching, automation, network interception, and defensive countermeasures.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
+        </header>
+        <nav class="sidebar" aria-label="Site navigation">
+            <h2>Navigation</h2>
+            <ol>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="introduction.html">Introduction</a></li>
+                <li><a href="injection.html">Injection Catalog</a></li>
+                <li><a href="stream-proof.html">Stream-Proof</a></li>
+                <li><a href="specific-hack-types.html">Hack Types</a></li>
+                <li><a href="case-studies.html">Case Studies</a></li>
+                <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="resources.html">Resources</a></li>
+            </ol>
+        </nav>
+        <main>
+            <section>
+                <h2>Advanced Browser-Game Hacking Patterns</h2>
+                <p>This section expands the core catalog with more practical patterns used in browser-based attack research, instrumentation, and defensive analysis.</p>
+
+                <div class="section-highlight">
+                    <h3>A) Runtime patching with wrappers</h3>
+                    <p>Wrapper-based patching is one of the most reliable ways to alter browser-game logic without immediately triggering obvious global scans. The method is simple: capture the original function, replace it with a controlled wrapper, and then call the original inside the wrapper so the game still sees normal behavior. This is especially effective when the game computes movement, cooldowns, damage, or inventory changes during an update loop.</p>
+                    <pre><code class="language-js">const originalTick = window.gameTick;
+window.gameTick = function (...args) {
+  const result = originalTick.apply(this, args);
+  if (window.__debugHooks) console.log('tick result', result);
+  return result;
+};</code></pre>
+                    <ul>
+                        <li>Capture the original function first, before replacing it, so you can preserve the real implementation.</li>
+                        <li>Keep wrappers narrow and specific to the function you actually need to alter, instead of replacing everything at once.</li>
+                        <li>Use debug flags and logging only for test environments, then remove or minimize the footprint before real use.</li>
+                        <li>Patch the final function that writes the observable state, not just the input handler, when you want the result to appear in the game UI.</li>
+                    </ul>
+                    <p>In browser games, the most valuable hooks are often the ones that run once per animation frame or once per physics update. These are the points where movement speed, health, ammo, cooldown timers, and resource counters are recalculated. Hook those paths and you gain a real foothold into the game’s state machine.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>B) Prototype and constructor hooks</h3>
+                    <p>Many games store player state, enemy state, inventories, and entity logic on prototypes or class constructors. If the game uses JavaScript classes, patching the prototype can affect every instance created later, which is much cleaner than manually wrapping every object you find in the DOM.</p>
+                    <pre><code class="language-js">const PlayerProto = window.Player?.prototype;
+if (PlayerProto && PlayerProto.move) {
+  const oldMove = PlayerProto.move;
+  PlayerProto.move = function (...args) {
+    args[0] = (args[0] || 1) * 1.35;
+    return oldMove.apply(this, args);
+  };
+}</code></pre>
+                    <ul>
+                        <li>Prototype hooks are powerful because they affect future objects without touching the existing game code by hand.</li>
+                        <li>Use targeted checks like <code>if (PlayerProto && PlayerProto.move)</code> before patching to avoid silent failures.</li>
+                        <li>When a constructor stores values in private fields or closures, patching the public prototype may not be enough; you may need to inspect the class body and patch its exposed methods instead.</li>
+                        <li>Be careful with constructor patching if the game uses multiple inheritance or wraps objects heavily, because those layers can change the actual call path.</li>
+                    </ul>
+                    <p>Prototype-based manipulation is particularly effective for movement speed, recoil, aim smoothing, reload timing, and enemy pathfinding because those behaviors are usually implemented in reusable methods rather than in one-off event handlers.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>C) Network, WebSocket, and asset interception</h3>
+                    <p>Browser games often rely on JSON config files, game state snapshots, and WebSocket updates. If you can see the request and response cycle, you can learn how the game determines what it should render, what rules it should apply, and what values it trusts. That gives you a direct path to patching behavior at the source rather than only at the UI layer.</p>
+                    <pre><code class="language-js">const origFetch = window.fetch;
+window.fetch = async (input, init) => {
+  const response = await origFetch(input, init);
+  const clone = response.clone();
+  clone.text().then(text => console.log('FETCH', input, text));
+  return response;
+};</code></pre>
+                    <ul>
+                        <li>Hook <code>fetch</code> and <code>XMLHttpRequest</code> to capture config payloads, asset manifests, and state snapshots.</li>
+                        <li>Patch WebSocket send/receive handlers to observe real-time movement, hit detection, and player updates.</li>
+                        <li>Replay responses from a local test page so you can experiment with values and compare the result against the real game loop.</li>
+                        <li>When a game uses compressed or encrypted traffic, focus first on the unencrypted state object or the JSON file that the game queries after login.</li>
+                    </ul>
+                    <p>For online browser games, the highest-value telemetry is usually the state update packet, the spawn packet, the inventory packet, and any data that includes enemy positions, cooldown values, or currency updates. These packets tell you what the browser trusts as truth and where the logic is vulnerable to replacement.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>D) WASM and compiled module analysis</h3>
+                    <p>When a browser game ships compiled logic as WebAssembly, the visible JavaScript layer can only tell you so much. The real control path may live in WASM exports, import tables, memory layout, or internal function tables. Instruments should be placed very early, before the game instance is created, so you can see how the module is instantiated and which imports it depends on.</p>
+                    <ul>
+                        <li>Hook <code>WebAssembly.instantiate</code>, <code>instantiateStreaming</code>, and <code>WebAssembly.Module.exports</code> to find the compiled entry points.</li>
+                        <li>Inspect memory usage and the compiled function table when the game loads its core update loop.</li>
+                        <li>Watch for custom sections, exported functions, and imported functions that map directly to movement, collision, or damage rules.</li>
+                        <li>Log the module bytes or exported signatures before patching to make it easier to understand which function is responsible for what.</li>
+                    </ul>
+                    <p>WASM is often used in browser games because it makes logic harder to reverse-engineer by eye. That makes it a prime target for instrumentation, not a reason to avoid it. Learn how the module is imported, how the memory is structured, and how the game calls into the compiled code before you attempt a deeper patch.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>E) Automation and external browser control</h3>
+                    <p>Automation frameworks turn one-off experiments into repeatable analysis pipelines. You can instruct a browser to open a test page, load the same hooks the game uses, intercept responses, log DOM changes, and replay the same path multiple times. This is useful for building confidence that a patch works before you try it against a live target.</p>
+                    <pre><code class="language-js">const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch({ headless: false });
+  const page = await browser.newPage();
+  await page.goto('http://localhost/test-page.html');
+})();</code></pre>
+                    <ul>
+                        <li>Use Playwright or Puppeteer to open a page in a clean browser context and then attach your hooks to the same runtime pipeline the game would use.</li>
+                        <li>Inspect console logs, network requests, and DOM snapshots across repeated runs to see which values change and which stay stable.</li>
+                        <li>Use automation to reproduce the same movement path, spawn loop, or resource gain sequence over and over so you can identify which part of the logic is responsible.</li>
+                        <li>Keep the automation flow simple at first, then add more hooks when you understand the game’s timing and update cadence.</li>
+                    </ul>
+                    <p>In practice, automation is not just for test pages. It is also a way to generate controlled, repeatable traces from live game environments where you can compare state before and after a patch without relying on a fragile one-off manual session.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>F) Defensive countermeasures to study</h3>
+                    <p>To understand how a game protects itself, study the same detection signals it uses: devtools hooks, global property checks, function replacement detection, integrity checks, and timing anomalies. If you can identify the detection path, you can choose a less obvious patching strategy that blends in with normal game behavior.</p>
+                    <ul>
+                        <li>Watch for changes to <code>window</code>, <code>document</code>, and global symbols that are not part of the normal page lifecycle.</li>
+                        <li>Compare frame timing and input timing against expected baselines to detect unnatural hot loops or delayed state updates.</li>
+                        <li>Look for integrity checks, script hashes, or asset signatures that verify the game environment before starting gameplay.</li>
+                        <li>Use delayed injection, namespaced wrappers, and randomly timed hooks to reduce the chance that your changes are caught by obvious signatures.</li>
+                    </ul>
+                    <p>Most browser-based games are not protected by a sophisticated anti-cheat stack. They are usually defended by simple checks that look for obvious tamper patterns, suspicious globals, or unusual timing. That means the best strategy is often to imitate normal browser behavior, avoid noisy global replacements, and patch only the pieces that truly influence gameplay.</p>
+                </div>
+
+                <div class="section-highlight">
+                    <h3>G) Practical test harness checklist</h3>
+                    <ol>
+                        <li>Build a local mock game page with a real animation loop, resource counters, fetch calls, and at least one state object that changes every frame.</li>
+                        <li>Instrument the page with logging around fetch, XHR, timers, DOM writes, and render callbacks so you can see exactly where the logic lives.</li>
+                        <li>Patch the smallest possible unit first: one function, one state object, or one packet field.</li>
+                        <li>Replay the same path multiple times and compare before/after snapshots to ensure the behavior changes are consistent and not random.</li>
+                        <li>Record the results, identify the exact function that caused the change, and document the patch path so it is easier to reuse later.</li>
+                    </ol>
+                    <p>This workflow turns a vague idea into a repeatable process: identify the update function, observe the state it uses, patch only the relevant values, and verify that the game still renders and behaves sensibly under test. That is how browser-game logic patches become reliable instead of guesswork.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="interactive.js"></script>
+</body>
+</html>

@@ -11,6 +11,10 @@
         <header>
             <h1>The Web Game Hacking Encyclopedia</h1>
             <p>An educational guide for developers and security engineers. Explore the main categories and learn how browser-based game hacking works.</p>
+            <div class="site-search">
+                <input id="site-search-input" type="search" placeholder="Search this website..." aria-label="Search this website" autocomplete="off">
+                <div id="site-search-results" class="search-results" hidden></div>
+            </div>
         </header>
         <nav class="sidebar" aria-label="Page navigation">
             <h2>Sections</h2>
@@ -21,6 +25,10 @@
                 <li><a href="specific-hack-types.html">Specific Hack Types</a></li>
                 <li><a href="case-studies.html">Case Studies</a></li>
                 <li><a href="anti-detection.html">Anti-Detection</a></li>
+                <li><a href="advanced-techniques.html">Advanced Techniques</a></li>
+                <li><a href="browser-internals.html">Browser Internals</a></li>
+                <li><a href="game-logic-patching.html">Game Logic Patching</a></li>
+                <li><a href="defensive-analysis.html">Defensive Analysis</a></li>
                 <li><a href="resources.html">Resources</a></li>
             </ol>
         </nav>
@@ -53,6 +61,22 @@
                         <h3>Anti-Detection</h3>
                         <p>Obfuscation, timing evasion, and signature hardening strategies for injected code.</p>
                     </a>
+                    <a class="section-card" href="advanced-techniques.html">
+                        <h3>Advanced Techniques</h3>
+                        <p>Wrappers, WASM inspection, automation, network interception, and deep instrumentation strategies.</p>
+                    </a>
+                    <a class="section-card" href="browser-internals.html">
+                        <h3>Browser Internals</h3>
+                        <p>Rendering, network, service worker, and runtime concepts that drive browser-game logic.</p>
+                    </a>
+                    <a class="section-card" href="game-logic-patching.html">
+                        <h3>Game Logic Patching</h3>
+                        <p>Patch loops, state updates, timers, and inventory/resource flows in controlled experiments.</p>
+                    </a>
+                    <a class="section-card" href="defensive-analysis.html">
+                        <h3>Defensive Analysis</h3>
+                        <p>Integrity checks, timing anomalies, anti-tamper signals, and safe evaluation patterns.</p>
+                    </a>
                     <a class="section-card" href="resources.html">
                         <h3>Resources</h3>
                         <p>Links to tools, documentation, and repositories for browser security research.</p>
@@ -61,5 +85,6 @@
             </section>
         </main>
     </div>
+    <script src="interactive.js"></script>
 </body>
 </html>
